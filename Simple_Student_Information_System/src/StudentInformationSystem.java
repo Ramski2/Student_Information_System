@@ -187,11 +187,7 @@ public class StudentInformationSystem extends JFrame{
             if (field instanceof JComboBox) {
                 JComboBox<String> comboBoxField = (JComboBox<String>) field;
                 ComboBox(comboBoxField, Table.csv(file[nextIndex+1]));
-                comboBoxField.addActionListener(e -> {
-                    if ("Add New".equals(comboBoxField.getSelectedItem())) {
-                        JOptionPane.showMessageDialog(null, "Can't fulfill command when in this window.", "Add NewError", JOptionPane.ERROR_MESSAGE);
-                    }
-                });
+                comboBoxField.removeItem("Add New");_
             }
             Fields.add(field);
         }
