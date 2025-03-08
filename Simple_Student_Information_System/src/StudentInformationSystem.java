@@ -187,7 +187,7 @@ public class StudentInformationSystem extends JFrame{
             if (field instanceof JComboBox) {
                 JComboBox<String> comboBoxField = (JComboBox<String>) field;
                 ComboBox(comboBoxField, Table.csv(file[nextIndex+1]));
-                comboBoxField.removeItem("Add New");_
+                comboBoxField.removeItem("Add New");
             }
             Fields.add(field);
         }
