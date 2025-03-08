@@ -244,7 +244,7 @@ public class Layout {
                                 .addComponent(inputWin, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                                 .addComponent(save)
-                                .addContainerGap(52, Short.MAX_VALUE))
+                                .addContainerGap(110, Short.MAX_VALUE))
         );
         return contentPane;
     }
