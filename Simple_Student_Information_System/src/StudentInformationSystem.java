@@ -176,7 +176,6 @@ public class StudentInformationSystem extends JFrame{
 
         JFrame frame = new JFrame("New Entry");
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        frame.setSize(300, 300);
         frame.setResizable(false);
 
         java.util.List<JComponent> Fields = new ArrayList<>();
