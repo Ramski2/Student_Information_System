@@ -7,7 +7,7 @@ import java.awt.event.KeyEvent;
 
 public class Tab_Panel {
 
-    private static JPanel createSearchPanel(DefaultTableModel model, JTable table) {
+    private static JPanel createSearchPanel(DefaultTableModel model, JTable table, TableRowSorter<DefaultTableModel> sorter) {
         JPanel searchPanel = new JPanel();
         JTextField srchfields = new JTextField();
         JComboBox<String> srchBy = new JComboBox<>();
@@ -17,12 +17,12 @@ public class Tab_Panel {
             srchBy.addItem(model.getColumnName(i));
         }
 
-        srchfields.addKeyListener(srchKeyListener(srchfields, srchBy, model, table));
+        srchfields.addKeyListener(srchKeyListener(srchfields, srchBy, model, table, sorter));
 
         return Layout.SearchPanelLayout(searchPanel, srchfields, srchlbl, srchBy);
     }
 
-    protected static JPanel createTabPanel(String file, JScrollPane sp, DefaultTableModel model, JTable table) {
+    protected static JPanel createTabPanel(String file, JScrollPane sp, DefaultTableModel model, JTable table, TableRowSorter<DefaultTableModel> sorter) {
         JPanel tabPanel = new JPanel();
 
         JLabel tabTitle = new JLabel(StudentInformationSystem.TitleName(file) + " Table");
@@ -30,7 +30,7 @@ public class Tab_Panel {
 
         JButton editTable = new JButton("Edit Table");
         JButton refresh = new JButton("Refresh Table");
-        JPanel searchPanel = createSearchPanel(model, table);
+        JPanel searchPanel = createSearchPanel(model, table, sorter);
 
         tabPanel.setBorder(BorderFactory.createLineBorder(new Color(0, 0, 0)));
         editTable.addActionListener(e -> editTableActionPerformed(tabPanel));
@@ -39,7 +39,7 @@ public class Tab_Panel {
         return Layout.TabPanelLayout(tabPanel, sp, tabTitle, editTable, searchPanel, refresh);
     }
 
-    private static KeyAdapter srchKeyListener(JTextField search, JComboBox<String> srchBy, DefaultTableModel model, JTable table) {
+    private static KeyAdapter srchKeyListener(JTextField search, JComboBox<String> srchBy, DefaultTableModel model, JTable table, TableRowSorter<DefaultTableModel> sorter) {
         return new KeyAdapter() {
             @Override
             public void keyReleased(KeyEvent e) {
@@ -61,9 +61,6 @@ public class Tab_Panel {
                 if (column == -1) {
                     return;
                 }
-
-                TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
-                table.setRowSorter(sorter);
                 sorter.setRowFilter(RowFilter.regexFilter(("(?i)") + Search, column));
 
             }
