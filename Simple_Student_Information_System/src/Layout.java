@@ -110,12 +110,16 @@ public class Layout {
         GroupLayout.ParallelGroup fgroup = inputPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING);
 
         for (int i = 0; i < tabName.size(); i++) {
-            ngroup.addComponent(tabName.get(i));
+            ngroup.addComponent(tabName.get(i), GroupLayout.Alignment.LEADING);
             if (i < fields.size()) {
                 fgroup.addComponent(fields.get(i), GroupLayout.PREFERRED_SIZE, 120, GroupLayout.PREFERRED_SIZE);
             }
         }
-        hgroup.addContainerGap().addGroup(ngroup).addPreferredGap(LayoutStyle.ComponentPlacement.RELATED).addGroup(fgroup).addContainerGap();
+        hgroup.addContainerGap()
+                .addGroup(ngroup)
+                .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(fgroup)
+                .addContainerGap();
         inputPanelLayout.setHorizontalGroup(hgroup);
 
         GroupLayout.SequentialGroup vgroup = inputPanelLayout.createSequentialGroup();
@@ -126,7 +130,8 @@ public class Layout {
             if (i < fields.size()) {
                 rowgroup.addComponent(fields.get(i), GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE);
             }
-            vgroup.addGroup(rowgroup).addPreferredGap(LayoutStyle.ComponentPlacement.RELATED);
+            vgroup.addGroup(rowgroup)
+                    .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED);
         }
 
 
@@ -136,49 +141,51 @@ public class Layout {
         return inputPanel;
     }
 
-    protected static JPanel EditPanelLayout(JPanel editPanel, JPanel inputPanel, JLabel editTitle, JPanel crudBtnPanel, JButton saveEdit, JButton clear){
+    protected static JPanel EditPanelLayout(JPanel editPanel, JPanel inputPanel, JLabel editTitle, JPanel crudBtnPanel, JButton close, JButton clear, JButton export){
 
         GroupLayout editPanelLayout = new GroupLayout(editPanel);
         editPanel.setLayout(editPanelLayout);
         editPanel.setBorder(BorderFactory.createLineBorder(new Color(0, 0, 0)));
 
         editPanelLayout.setHorizontalGroup(
-                editPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                editPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, editPanelLayout.createSequentialGroup()
+                                .addContainerGap(21, Short.MAX_VALUE)
+                                .addGroup(editPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addComponent(crudBtnPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(close))
+                                .addGap(22, 22, 22))
                         .addGroup(editPanelLayout.createSequentialGroup()
-                                .addGroup(editPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                                .addGroup(editPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                         .addGroup(editPanelLayout.createSequentialGroup()
                                                 .addGap(33, 33, 33)
-                                                .addComponent(inputPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+                                                .addComponent(inputPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                                         .addGroup(editPanelLayout.createSequentialGroup()
                                                 .addContainerGap()
-                                                .addComponent(editTitle, GroupLayout.PREFERRED_SIZE, 89, GroupLayout.PREFERRED_SIZE)))
-                                .addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addGroup(GroupLayout.Alignment.TRAILING, editPanelLayout.createSequentialGroup()
-                                .addContainerGap(21, Short.MAX_VALUE)
-                                .addGroup(editPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                                        .addGroup(GroupLayout.Alignment.TRAILING, editPanelLayout.createSequentialGroup()
-                                                .addGroup(editPanelLayout.createParallelGroup(GroupLayout.Alignment.TRAILING)
-                                                        .addComponent(crudBtnPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                                                        .addComponent(saveEdit))
-                                                .addGap(22, 22, 22))
-                                        .addGroup(GroupLayout.Alignment.TRAILING, editPanelLayout.createSequentialGroup()
-                                                .addComponent(clear)
-                                                .addGap(30, 30, 30))))
+                                                .addComponent(editTitle, javax.swing.GroupLayout.PREFERRED_SIZE, 89, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                        .addGroup(editPanelLayout.createSequentialGroup()
+                                                .addGap(60, 70, 70)
+                                                .addComponent(export)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                                .addComponent(clear)))
+                                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         editPanelLayout.setVerticalGroup(
-                editPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                editPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                         .addGroup(editPanelLayout.createSequentialGroup()
                                 .addGap(16, 16, 16)
-                                .addComponent(editTitle, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(saveEdit)
+                                .addComponent(editTitle, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(close)
                                 .addGap(3, 3, 3)
-                                .addComponent(inputPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                                .addComponent(inputPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addGap(18, 18, 18)
-                                .addComponent(crudBtnPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                                .addGap(18, 18, 18)
-                                .addComponent(clear)
-                                .addGap(0, 0, Short.MAX_VALUE))
+                                .addComponent(crudBtnPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(editPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(export)
+                                        .addComponent(clear))
+                                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         return editPanel;
     }

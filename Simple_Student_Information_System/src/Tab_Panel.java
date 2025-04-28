@@ -7,7 +7,7 @@ import java.awt.event.KeyEvent;
 
 public class Tab_Panel {
 
-    private static JPanel createSearchPanel(DefaultTableModel model, JTable table, TableRowSorter<DefaultTableModel> sorter) {
+    private static JPanel createSearchPanel(DefaultTableModel model, TableRowSorter<DefaultTableModel> sorter) {
         JPanel searchPanel = new JPanel();
         JTextField srchfields = new JTextField();
         JComboBox<String> srchBy = new JComboBox<>();
@@ -17,29 +17,29 @@ public class Tab_Panel {
             srchBy.addItem(model.getColumnName(i));
         }
 
-        srchfields.addKeyListener(srchKeyListener(srchfields, srchBy, model, table, sorter));
+        srchfields.addKeyListener(srchKeyListener(srchfields, srchBy, model, sorter));
 
         return Layout.SearchPanelLayout(searchPanel, srchfields, srchlbl, srchBy);
     }
 
-    protected static JPanel createTabPanel(String file, JScrollPane sp, DefaultTableModel model, JTable table, TableRowSorter<DefaultTableModel> sorter) {
+    protected static JPanel createTabPanel(String file, JScrollPane sp, DefaultTableModel model, TableRowSorter<DefaultTableModel> sorter,JTable table) {
         JPanel tabPanel = new JPanel();
 
-        JLabel tabTitle = new JLabel(StudentInformationSystem.TitleName(file) + " Table");
+        JLabel tabTitle = new JLabel(StudentInformationSystem.dbName(file) + " Table");
         tabTitle.setFont(new Font("Segoe UI", Font.BOLD, 18));
 
         JButton editTable = new JButton("Edit Table");
         JButton refresh = new JButton("Refresh Table");
-        JPanel searchPanel = createSearchPanel(model, table, sorter);
+        JPanel searchPanel = createSearchPanel(model, sorter);
 
         tabPanel.setBorder(BorderFactory.createLineBorder(new Color(0, 0, 0)));
         editTable.addActionListener(e -> editTableActionPerformed(tabPanel));
-        refresh.addActionListener(e -> StudentInformationSystem.refresh());
+        refresh.addActionListener(e -> StudentInformationSystem.Fetch(table, file));
 
         return Layout.TabPanelLayout(tabPanel, sp, tabTitle, editTable, searchPanel, refresh);
     }
 
-    private static KeyAdapter srchKeyListener(JTextField search, JComboBox<String> srchBy, DefaultTableModel model, JTable table, TableRowSorter<DefaultTableModel> sorter) {
+    private static KeyAdapter srchKeyListener(JTextField search, JComboBox<String> srchBy, DefaultTableModel model, TableRowSorter<DefaultTableModel> sorter) {
         return new KeyAdapter() {
             @Override
             public void keyReleased(KeyEvent e) {
@@ -61,6 +61,7 @@ public class Tab_Panel {
                 if (column == -1) {
                     return;
                 }
+
                 sorter.setRowFilter(RowFilter.regexFilter(("(?i)") + Search, column));
 
             }
