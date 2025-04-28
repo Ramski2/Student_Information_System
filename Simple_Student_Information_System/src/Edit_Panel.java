@@ -6,15 +6,15 @@ import java.util.List;
 
 public class Edit_Panel {
 
-    private static JPanel createCRUDBtnPanel(DefaultTableModel model, JTable table, List<JComponent> fields) {
+    private static JPanel createCRUDBtnPanel(DefaultTableModel model, JTable table, List<JComponent> fields, TableRowSorter<DefaultTableModel> sorter) {
         JPanel crudBtnPanel = new JPanel();
         JButton add = new JButton("Add");
         JButton del = new JButton("Delete");
         JButton upd = new JButton("Update");
 
         add.addActionListener(new Create(model, fields));
-        del.addActionListener(new Delete(model, table));
-        upd.addActionListener(new Update(model, table, fields));
+        del.addActionListener(new Delete(model, table, sorter));
+        upd.addActionListener(new Update(model, table, fields, sorter));
 
         return Layout.CRUDBtnPanelLayout(crudBtnPanel, add, del, upd);
     }
@@ -31,7 +31,7 @@ public class Edit_Panel {
         return Layout.InputPanelLayout(inputPanel, tabName, fields);
     }
 
-    protected static JPanel createEditPanelLayout(DefaultTableModel model, List<JComponent> fields, JTable table, String file) {
+    protected static JPanel createEditPanelLayout(DefaultTableModel model, List<JComponent> fields, JTable table, String file, TableRowSorter<DefaultTableModel> sorter) {
         JPanel editPanel = new JPanel();
 
         JLabel editTitle = new JLabel("Table Edit");
@@ -46,7 +46,7 @@ public class Edit_Panel {
         }
 
         JPanel inputPanel = createInputPanel(fields, model);
-        JPanel crudBtnPanel = createCRUDBtnPanel(model, table, fields);
+        JPanel crudBtnPanel = createCRUDBtnPanel(model, table, fields, sorter);
 
         for (Component c : crudBtnPanel.getComponents()) {
             if (c instanceof JButton) {
