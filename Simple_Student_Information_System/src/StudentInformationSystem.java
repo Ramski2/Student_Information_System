@@ -7,24 +7,94 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.sql.*;
 import java.text.ParseException;
+import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Vector;
 
 public class StudentInformationSystem extends JFrame{
 
-    static String[] file = {"src\\Student.csv", "src\\Program.csv", "src\\College.csv"};
+    static String[] db = {"csv\\Student.csv", "csv\\Program.csv", "csv\\College.csv"};
     String[] gender = {"Male", "Female", "Other", "Rather not say"};
     String[] ylvl = {"1", "2", "3", "4"};
+    static String[] Student = {"Student ID", "First Name", "Last Name", "Gender", "Year Level", "Course"};
+    static String[] Program = {"Program Code", "Program Name", "College"};
+    static String[] College = {"College Code", "College Name"};
+    static int currentYear = LocalDate.now().getYear();
+
 
     static JTabbedPane tab = new JTabbedPane();
 
+    protected static String dbName(String fileName) {
+        return fileName.substring(fileName.lastIndexOf("\\") + 1, fileName.lastIndexOf("."));
+    }
+
     public StudentInformationSystem() {
         initComponents();
+    }
+
+    static Connection con;
+    static PreparedStatement pst;
+    static ResultSet rs;
+
+
+    public void Connect(){
+        try {
+            con = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306",
+                    "root",
+                    "12345678");
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void column(DefaultTableModel model, String file){
+        if (dbName(file).equals("Student")){
+
+            for (String columnName : Student) {
+                model.addColumn(columnName);
+            }
+        } else if (dbName(file).equals("Program")){
+             for (String columnName : Program) {
+                model.addColumn(columnName);
+            }
+        } else {
+            for (String columnName : College) {
+                model.addColumn(columnName);
+            }
+        }
+    }
+
+    public static void Fetch(JTable table, String file) {
+
+        DefaultTableModel sqlModel = (DefaultTableModel)table.getModel();
+        sqlModel.setRowCount(0);
+
+        try {
+            if (dbName(file).equals("Student")){
+                pst = con.prepareStatement("SELECT * FROM ssis.student");
+            } else if (dbName(file).equals("Program")){
+                pst = con.prepareStatement("SELECT * FROM ssis.program");
+            } else {
+                pst = con.prepareStatement("SELECT * FROM ssis.college");
+            }
+
+            rs = pst.executeQuery();
+            ResultSetMetaData rss = rs.getMetaData();
+
+            while (rs.next()){
+                Vector<String> row = new Vector<>();
+                for (int a = 1; a <= rss.getColumnCount(); a++){
+                    row.add(rs.getString(a));
+                }
+                sqlModel.addRow(row);
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void initComponents() {
@@ -37,15 +107,12 @@ public class StudentInformationSystem extends JFrame{
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                saveAndExit();
+                exportAndExit();
             }
         });
-        for (String f : file) {
-            tab.addTab(TitleName(f), PanelLayout(f));
+        for (String f : db) {
+            tab.addTab(dbName(f), PanelLayout(f));
         }
-
-
-        tab.addChangeListener(e -> refresh());
 
         GroupLayout layout = new GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -74,45 +141,39 @@ public class StudentInformationSystem extends JFrame{
         panel.setLayout(panelLayout);
 
 
-        DefaultTableModel model = Table.csv(file);
+        DefaultTableModel model;
+        model = new DefaultTableModel() {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+
+        column(model, file);
         JTable table = new JTable(model);
         JScrollPane sp = new JScrollPane(table);
         TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
         table.setRowSorter(sorter);
+        Connect();
+        Fetch(table, file);
 
-
-
-        java.util.List<JComponent> fields = createFields(model, file);
+        List<JComponent> fields = createFields(model, file);
         table.addMouseListener(createTableMouseListener(model, table, fields, sorter));
 
-
-
-        JPanel tabPanel = Tab_Panel.createTabPanel(file, sp, model, table, sorter);
-        JPanel editPanel = Edit_Panel.createEditPanelLayout(model, fields, table, file, sorter);
+        JPanel tabPanel = Tab_Panel.createTabPanel(file, sp, model, sorter, table);
+        JPanel editPanel = Edit_Panel.createEditPanelLayout(model, fields, table, file, sorter, pst, con);
 
 
         return Layout.MainPanelLayout(panel, tabPanel, editPanel);
     }
 
-    protected static String TitleName(String fileName) {
-        return fileName.substring(fileName.lastIndexOf("\\") + 1, fileName.lastIndexOf("."));
-    }
 
-    private java.util.List<JComponent> createFields(DefaultTableModel model, String f) {
-        java.util.List<JComponent> fields = new ArrayList<>();
+   private List<JComponent> createFields(DefaultTableModel model, String f) {
+        List<JComponent> fields = new ArrayList<>();
         JComboBox<String> tabCode = new JComboBox<>();
-        int index = Arrays.asList(file).indexOf(f) + 1;
 
-        // Ensure we don’t exceed the file array length
-        DefaultTableModel cModel = new DefaultTableModel();
-        if (index < file.length) {
-            cModel = Table.csv(file[index]);  // Load next file's data
-        }
-
-
-
-        if (f.equals(file[0])) {
-            fields.add(new JFormattedTextField(format()));
+        if (f.equals(db[0])) {
+            fields.add(format());
 
             for (int i = 1; i < model.getColumnCount() - 3; i++) {
                 fields.add(new JTextField());
@@ -122,15 +183,15 @@ public class StudentInformationSystem extends JFrame{
             fields.add(new JComboBox<>(ylvl));
 
             fields.add(tabCode);
-            ComboBox(tabCode, cModel);
+            ComboBox(tabCode, f);
 
 
-        } else if (f.equals(file[1])) {
+        } else if (f.equals(db[1])) {
             for (int i = 0; i < model.getColumnCount() - 1; i++) {
                 fields.add(new JTextField());
             }
             fields.add(tabCode);
-            ComboBox(tabCode, cModel);
+            ComboBox(tabCode, f);
 
         } else {
             for (int i = 0; i < model.getColumnCount(); i++) {
@@ -140,68 +201,113 @@ public class StudentInformationSystem extends JFrame{
 
         tabCode.addActionListener(e -> {
             if ("Add New".equals(tabCode.getSelectedItem())) {
-                InputWindow(f, tabCode);
+                InputWindow(tabCode);
             }
         });
         return fields;
     }
 
-    protected MaskFormatter format() {
-        MaskFormatter format;
+    protected JFormattedTextField format() {
+
         try {
-            format = new MaskFormatter("####-####");
+            MaskFormatter format = new MaskFormatter("####-####");
             format.setValidCharacters("0123456789");
+
+            JFormattedTextField formatField = new JFormattedTextField(format);
+
+            formatField.setEditable(true);
+
+        formatField.addCaretListener(e -> {
+
+            if (e.getDot() >= 9) {
+                formatField.setCaretPosition(5);
+            }
+        });
+
+            return formatField;
         } catch (ParseException e) {
             throw new RuntimeException(e);
         }
-        return format;
+
     }
 
-    private static void ComboBox(JComboBox<String> comboBox, DefaultTableModel cModel) {
+    private static void ComboBox(JComboBox<String> comboBox, String file /*, DefaultTableModel cModel*/) {
         comboBox.removeAllItems();
 
-
-        for (int row = 0; row < cModel.getRowCount(); row++) {
-            String value = cModel.getValueAt(row, 0).toString();
-            if (((DefaultComboBoxModel<String>) comboBox.getModel()).getIndexOf(value) == -1) {
-                comboBox.addItem(value);
+        try {
+            if (dbName(file).equals("Student")){
+                pst = con.prepareStatement("SELECT program_code FROM ssis.program");
+            } else if (dbName(file).equals("Program")){
+                pst = con.prepareStatement("SELECT college_code FROM ssis.college");
             }
-        }
+            rs = pst.executeQuery();
+            ResultSetMetaData rss = rs.getMetaData();
+
+            while (rs.next()) {
+
+                for (int a = 1; a <= rss.getColumnCount(); a++) {
+                    comboBox.addItem(rs.getString(a));
+                }
+
+            }
+        } catch (SQLException e) {
+        throw new RuntimeException(e);
+    }
+
         comboBox.addItem("Add New");
     }
 
-    private void InputWindow(String f, JComboBox<String> comboBox) {
-        int nextIndex = Arrays.asList(file).indexOf(f) + 1;
-        if (nextIndex >= file.length) return;
-
-        DefaultTableModel nextModel = Table.csv(file[nextIndex]);
+    private void InputWindow(JComboBox<String> cBox) {
+        int index = tab.getSelectedIndex();
+        if (index == -1) return;
 
         JFrame frame = new JFrame("New Entry");
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.setResizable(false);
 
-        java.util.List<JComponent> Fields = new ArrayList<>();
-        java.util.List<JLabel> name = new ArrayList<>();
+        List<JComponent> Fields = new ArrayList<>();
+        List<JLabel> name = new ArrayList<>();
 
-        for (int i = 0; i < nextModel.getColumnCount(); i++) {
-            name.add(new JLabel(nextModel.getColumnName(i) + ":"));
-            JComponent field = (f.equals(file[0]) && i == nextModel.getColumnCount() - 1) ? new JComboBox<>() : new JTextField();
-            if (field instanceof JComboBox) {
-                JComboBox<String> comboBoxField = (JComboBox<String>) field;
-                ComboBox(comboBoxField, Table.csv(file[nextIndex+1]));
-                comboBoxField.removeItem("Add New");
+        if (index == 0){
+            for (int i = 0; i < Program.length; i++){
+                name.add(new JLabel(Program[i] + ":"));
+
+                if (i == Program.length - 1) {
+                    Fields.add(new JComboBox<>());
+                } else {
+                    Fields.add(new JTextField());
+                }
+                if (Fields.getLast() instanceof JComboBox<?>){
+                    @SuppressWarnings("unchecked")
+                    JComboBox<String> box = (JComboBox<String>) Fields.getLast();
+                    ComboBox(box, db[1]);
+                    box.removeItem("Add New");
+                }
             }
-            Fields.add(field);
-        }
+        } else if (index == 1){
+            for (int i = 0; i < College.length; i++){
+                name.add(new JLabel(College[i] + ":"));
 
+                if (i == Program.length - 1) {
+                    Fields.add(new JComboBox<>());
+                } else {
+                    Fields.add(new JTextField());
+                }
+                if (Fields.getLast() instanceof JComboBox<?>){
+                    @SuppressWarnings("unchecked")
+                    JComboBox<String> box = (JComboBox<String>) Fields.getLast();
+                    ComboBox(box, db[2]);
+                    box.removeItem("Add New");
+                }
+            }
+        }
 
         JPanel inputWin = Layout.InputWinLayout(Fields, name);
 
-        JLabel Title = new JLabel("Add New " + TitleName(file[nextIndex]));
+        JLabel Title = new JLabel("Add New " + dbName(db[index + 1]));
         Title.setFont(new Font("Segoe UI", Font.BOLD, 18));
 
-        JButton save = getJButton(Fields, nextModel, nextIndex, comboBox, frame);
-        save.addActionListener(e-> refresh());
+        JButton save = getJButton(Fields, frame, cBox);
 
 
         JPanel contentPane = Layout.AddNewContentPaneLayout(Title, inputWin, save);
@@ -209,62 +315,63 @@ public class StudentInformationSystem extends JFrame{
         frame.pack();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
+
     }
 
-    private JButton getJButton(java.util.List<JComponent> Fields, DefaultTableModel nextModel, int nextIndex, JComboBox<String> Box, JFrame frame) {
+    private JButton getJButton(List<JComponent> Fields, JFrame frame, JComboBox<String> cBox) {
         JButton save = new JButton("Save");
         save.addActionListener(e -> {
-            java.util.List<String> data = new ArrayList<>();
+            List<String> data = new ArrayList<>();
 
-            for(JComponent field : Fields){
-                if (field instanceof JTextField){
+            for (JComponent field : Fields) {
+                if (field instanceof JTextField) {
                     data.add(((JTextField) field).getText().trim());
                 }
-                if (field instanceof JComboBox<?>){
+                if (field instanceof JComboBox<?>) {
                     Object selectedItem = ((JComboBox<?>) field).getSelectedItem();
-
-                    if (selectedItem != null && "Add New".equals(selectedItem.toString())) {
-                        String name = nextModel.getColumnName(nextModel.getColumnCount()-1);
-                        JOptionPane.showMessageDialog(null, "No " + name + " selected!", "Invalid " + name, JOptionPane.ERROR_MESSAGE);
-                        return;
-                    }
                     data.add(selectedItem != null ? selectedItem.toString() : null);
                 }
             }
 
-            for (String value : data){
-                if (value.isEmpty()){
+            for (String value : data) {
+                if (value.isEmpty()) {
                     JOptionPane.showMessageDialog(null, "Data incomplete! Please make sure to put data on all fields.", "Error", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
             }
 
-            nextModel.addRow(data.toArray());
-
-            try (BufferedWriter saveRow = new BufferedWriter(new FileWriter(file[nextIndex], true))) {
-                int i = nextModel.getRowCount()-1;
-                for (int j = 0; j < nextModel.getColumnCount(); j++){
-                    saveRow.append(nextModel.getValueAt(i, j).toString());
-                    if (j < nextModel.getColumnCount()-1){
-                        saveRow.append(",");
-                    }
+            try {
+                pst = con.prepareStatement("INSERT INTO ssis . program (program_code,program_name,college)VALUES(?,?,?)");
+                for (int i = 0; i < Fields.size(); i++){
+                    pst.setString(i + 1, data.get(i));
                 }
-                saveRow.append('\n');
-            } catch (IOException ex) {
+                int k = pst.executeUpdate();
+                if (k==1){
+                    for (JComponent tfield : Fields){
+                        if(tfield instanceof JTextField){
+                            ((JTextField) tfield).setText(null);
+                        } else if (tfield instanceof JComboBox<?>){
+                            ((JComboBox<?>) tfield).setSelectedItem(-1);
+                        }
+                    }
+                    JOptionPane.showMessageDialog(null, "Added Successfully!", "Data Added", JOptionPane.INFORMATION_MESSAGE);
+                }
+            } catch (SQLException ex) {
                 throw new RuntimeException(ex);
             }
-            ComboBox(Box, nextModel);
-
+            ComboBox(cBox, db[0]);
             frame.dispose();
         });
+
         return save;
     }
 
-    private MouseAdapter createTableMouseListener(DefaultTableModel model, JTable table, java.util.List<JComponent> inputFields, TableRowSorter<DefaultTableModel> sorter) {
+    private MouseAdapter createTableMouseListener(DefaultTableModel model, JTable table, List<JComponent> inputFields, TableRowSorter<DefaultTableModel> sorter) {
         return new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 int selectedRow = sorter.convertRowIndexToModel(table.getSelectedRow());
+
                 for (int i = 0; i < model.getColumnCount(); i++) {
                     if (inputFields.get(i) instanceof JTextField) {
                         ((JTextField) inputFields.get(i)).setText(model.getValueAt(selectedRow, i).toString());
@@ -276,44 +383,6 @@ public class StudentInformationSystem extends JFrame{
         };
     }
 
-    protected static void refresh() {
-        int selectedIndex = tab.getSelectedIndex();
-        if (selectedIndex == -1) return;
-
-        String f = file[selectedIndex];
-        JPanel panel = (JPanel) tab.getComponentAt(selectedIndex);
-        JScrollPane sp = findScrollPane(panel);
-        if (sp != null){
-            JTable table = (JTable) sp.getViewport().getView();
-            DefaultTableModel model = (DefaultTableModel) table.getModel();
-
-            DefaultTableModel newModel = Table.csv(f);
-            model.setRowCount(0);
-            for (int i = 0; i < newModel.getRowCount(); i++) {
-                model.addRow(getRowData(newModel, i));
-            }
-            table.revalidate();
-            table.repaint();
-        }
-
-        JPanel inputPanel = findInputPanel(panel);
-
-        List<JComboBox<String>> comboBoxes = new ArrayList<>();
-        if (inputPanel != null){
-            for (Component comp : inputPanel.getComponents()) {
-                if (comp instanceof JComboBox) {
-                    comboBoxes.add((JComboBox<String>) comp);
-                }
-            }
-
-            if (!comboBoxes.isEmpty()) {
-                JComboBox<String> lastComboBox = comboBoxes.getLast();
-                DefaultTableModel programModel = Table.csv(file[selectedIndex+1]);
-                ComboBox(lastComboBox, programModel);
-            }
-        }
-
-    }
 
     private static JScrollPane findScrollPane(Container container) {
         for (Component comp : container.getComponents()) {
@@ -326,33 +395,11 @@ public class StudentInformationSystem extends JFrame{
         }
         return null;
     }
-    public static JPanel findInputPanel(Container container) {
-        for (Component comp : container.getComponents()) {
-            if (comp instanceof JPanel panel) {
-                if ("inputPanel".equals(panel.getName())) { // Use a unique identifier
-                    return panel;
-                } else {
-                    JPanel nestedPanel = findInputPanel(panel);
-                    if (nestedPanel != null) {
-                        return nestedPanel;
-                    }
-                }
-            }
-        }
-        return null;
-    }
-    private static Object[] getRowData(DefaultTableModel model, int row) {
-        Object[] rowData = new Object[model.getColumnCount()];
-        for (int col = 0; col < model.getColumnCount(); col++) {
-            rowData[col] = model.getValueAt(row, col);
-        }
-        return rowData;
-    }
 
-    private void saveAndExit() {
+    private void exportAndExit() {
         int confirm = JOptionPane.showConfirmDialog(
                 this,
-                "Do you want to save changes before exiting?",
+                "Do you want to Export Data before exiting?",
                 "Save & Exit",
                 JOptionPane.YES_NO_CANCEL_OPTION
         );
@@ -362,22 +409,24 @@ public class StudentInformationSystem extends JFrame{
         if (confirm == JOptionPane.YES_OPTION) {
             saveAllTabs();
         }
+        if (confirm == JOptionPane.CLOSED_OPTION) return;
 
-        System.exit(0); // Exit application
+        System.exit(0);
     }
 
     private void saveAllTabs(){
         for (int i = 0; i < tab.getTabCount(); i++){
-            String f = file[i];
+            String f = db[i];
             JPanel panel = (JPanel) tab.getComponentAt(i);
             JScrollPane sp = findScrollPane(panel);
             if (sp != null){
                 JTable table = (JTable) sp.getViewport().getView();
-                new SaveTable(table, f).actionPerformed(null);
+                new SaveTableCSV(table, f).actionPerformed(null);
             }
 
 
         }
     }
+
 }
 
