@@ -76,7 +76,8 @@ public class StudentInformationSystem extends JFrame{
         DefaultTableModel model = Table.csv(file);
         JTable table = new JTable(model);
         JScrollPane sp = new JScrollPane(table);
-        table.setAutoCreateRowSorter(true);
+        TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
+        table.setRowSorter(sorter);
 
 
 
@@ -262,7 +263,7 @@ public class StudentInformationSystem extends JFrame{
         return new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                int selectedRow = table.getSelectedRow();
+                int selectedRow = sorter.convertRowIndexToModel(table.getSelectedRow());
                 for (int i = 0; i < model.getColumnCount(); i++) {
                     if (inputFields.get(i) instanceof JTextField) {
                         ((JTextField) inputFields.get(i)).setText(model.getValueAt(selectedRow, i).toString());
