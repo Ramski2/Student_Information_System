@@ -82,12 +82,12 @@ public class StudentInformationSystem extends JFrame{
 
 
         java.util.List<JComponent> fields = createFields(model, file);
-        table.addMouseListener(createTableMouseListener(model, table, fields));
+        table.addMouseListener(createTableMouseListener(model, table, fields, sorter));
 
 
 
-        JPanel tabPanel = Tab_Panel.createTabPanel(file, sp, model, table);
-        JPanel editPanel = Edit_Panel.createEditPanelLayout(model, fields, table, file);
+        JPanel tabPanel = Tab_Panel.createTabPanel(file, sp, model, table, sorter);
+        JPanel editPanel = Edit_Panel.createEditPanelLayout(model, fields, table, file, sorter);
 
 
         return Layout.MainPanelLayout(panel, tabPanel, editPanel);
@@ -259,7 +259,7 @@ public class StudentInformationSystem extends JFrame{
         return save;
     }
 
-    private MouseAdapter createTableMouseListener(DefaultTableModel model, JTable table, java.util.List<JComponent> inputFields) {
+    private MouseAdapter createTableMouseListener(DefaultTableModel model, JTable table, java.util.List<JComponent> inputFields, TableRowSorter<DefaultTableModel> sorter) {
         return new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
