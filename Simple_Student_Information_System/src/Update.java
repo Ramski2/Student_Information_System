@@ -8,11 +8,13 @@ public class Update implements ActionListener {
     private final DefaultTableModel model;
     private final JTable table;
     private final List<JComponent> tFields;
+    private final TableRowSorter<DefaultTableModel> sorter;
 
-    public Update(DefaultTableModel model, JTable table, List<JComponent> tFields){
+    public Update(DefaultTableModel model, JTable table, List<JComponent> tFields, TableRowSorter<DefaultTableModel> sorter){
         this.model = model;
         this.table = table;
         this.tFields = tFields;
+        this.sorter = sorter;
     }
 
 
@@ -40,7 +42,7 @@ public class Update implements ActionListener {
         if (!valid) return;
         if (table.getSelectedRowCount() == 1) {
             for (int i = 0; i < model.getColumnCount(); i++) {
-                model.setValueAt(data[i], table.getSelectedRow(), i);
+                model.setValueAt(data[i], sorter.convertRowIndexToModel(table.getSelectedRow()), i);
             }
             JOptionPane.showMessageDialog(null, "Updated Successfully", "Success", JOptionPane.INFORMATION_MESSAGE);
 
