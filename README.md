@@ -1,2 +1,2 @@
-Activity for CCC151
+SSIS Activity for CCC151
 by Gamboa
